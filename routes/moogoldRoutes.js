@@ -805,56 +805,89 @@ router.post("/wallet", authMiddleware, async (req, res) => {
       });
     }
 
-    let payload;
-    if (gameName === "428075" || gameName === "4233885") {
-      payload = {
-        path: "order/create_order",
-        data: {
-          category: 1,
-          "product-id": productid,
-          quantity: 1,
-          "User ID": userid,
-          Server: zoneid,
-          fields: [userid, zoneid],
+    //? GETTING FIELDS
+    const fieldsPayload = {
+      path: "product/product_detail",
+      product_id: gameName,
+    };
+
+    const timestampp = Math.floor(Date.now() / 1000);
+    const pathh = "product/product_detail";
+    const authSignaturee = generateAuthSignature(
+      fieldsPayload,
+      timestampp,
+      pathh
+    );
+
+    const moogold = await axios.post(
+      "https://moogold.com/wp-json/v1/api/product/product_detail",
+      fieldsPayload,
+      {
+        headers: {
+          Authorization: generateBasicAuthHeader(),
+          auth: authSignaturee,
+          timestamp: timestampp,
         },
-      };
-    } else if (gameName === "5177311") {
-      payload = {
-        path: "order/create_order",
-        data: {
-          category: 1,
-          "product-id": productid,
-          quantity: 1,
-          "Player ID": userid,
-          "Role Name": zoneid,
-          fields: [userid, zoneid],
-        },
-      };
-    } else {
-      payload = {
-        path: "order/create_order",
-        data: {
-          category: 1,
-          "product-id": productid,
-          quantity: 1,
-          "User ID": userid,
-          "Server ID": zoneid,
-          fields: [userid, zoneid],
-        },
-      };
+      }
+    );
+
+    if (moogold.data.err_code) {
+      const order = new orderModel({
+        api: api,
+        amount: amount,
+        orderId: orderId,
+        p_info: pname,
+        price: txn_amount,
+        customer_email,
+        customer_mobile,
+        playerId: userid,
+        userId: userid,
+        zoneId: zoneid,
+        status: "failed",
+      });
+      await order.save();
+      return res.status(201).send({ success: false, message: "Contact to Admin" });
     }
+
+    //? GETTING FIELDS END
+
+    //! CREATE ORDER MOOGOLD
+    const payload = {
+      path: "order/create_order",
+      data: {
+        category: 1,
+        "product-id": productid,
+        quantity: 1,
+      },
+    };
+
+    moogold.data.fields.forEach((field, index) => {
+      if (index === 0) {
+        payload.data[field] = userid;
+      } else if (index === 1) {
+        payload.data[field] = zoneid;
+      }
+    });
 
     const timestamp = Math.floor(Date.now() / 1000);
     const path = "order/create_order";
     const authSignature = generateAuthSignature(payload, timestamp, path);
 
-    const response = await axios.post("https://moogold.com/wp-json/v1/api/order/create_order", payload, {
-      headers: {
-        Authorization: generateBasicAuthHeader(),
-        auth: authSignature,
-        timestamp: timestamp,
-      },
-    });
+    console.log("Sending order creation request to Moogold...");
+
+    const response = await axios.post(
+      "https://moogold.com/wp-json/v1/api/order/create_order",
+      payload,
+      {
+        headers: {
+          Authorization: generateBasicAuthHeader(),
+          auth: authSignature,
+          timestamp: timestamp,
+        },
+      }
+    );
+    
+    console.log(response.data);
 
     if (response.data.err_code) {
       const order = new orderModel({
@@ -871,9 +904,12 @@ router.post("/wallet", authMiddleware, async (req, res) => {
         status: "failed",
       });
       await order.save();
-      return res.status(400).send({ success: false, message: "Order Failed" });
+      return res.status(201).send({ success: false, message: "Order Failed" });
     }
 
+    console.log(response.data.order_id);
+
+  
     if (response.status) {
       const order = new orderModel({
         api: api,
