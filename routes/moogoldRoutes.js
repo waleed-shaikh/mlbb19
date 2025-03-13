@@ -495,7 +495,7 @@ router.post("/create-order", authMiddleware, async (req, res) => {
     res.status(500).json({ error: error });
   }
 });
-router.post("/check-status", async (req, res) => {
+router.get("/check-status", async (req, res) => {
   try {
     const { client_txn_id } = req.query;
 
