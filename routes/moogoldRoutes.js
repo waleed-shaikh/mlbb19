@@ -9,6 +9,7 @@ const nodemailer = require("nodemailer");
 const crypto = require("crypto");
 const authMiddleware = require("../middlewares/authMiddleware");
 const walletHistoryModel = require("../models/walletHistoryModel");
+const userModel = require("../models/userModel");
 const router = express.Router();
 
 const generateBasicAuthHeader = () => {
