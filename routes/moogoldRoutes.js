@@ -503,6 +503,7 @@ router.get("/check-status", async (req, res) => {
       orderId: client_txn_id,
     });
     if (existingPayment) {
+      console.log(existingPayment)
       return res.redirect("https://zelanstore.com/user-dashboard");
     }
 

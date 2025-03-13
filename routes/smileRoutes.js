@@ -10,6 +10,7 @@ const fs = require("fs");
 const nodemailer = require("nodemailer");
 const generalRateLimiter = require("../middlewares/generalRateLimiter");
 const walletHistoryModel = require("../models/walletHistoryModel");
+const userModel = require("../models/userModel");
 const router = express.Router();
 
 // PGATEWAY
