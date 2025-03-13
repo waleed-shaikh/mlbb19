@@ -498,9 +498,9 @@ router.post("/create-order", authMiddleware, async (req, res) => {
 router.get("/check-status", async (req, res) => {
   try {
     const { client_txn_id } = req.query;
-
+    
     const existingPayment = await paymentModel.findOne({
-      orderId: orderId,
+      orderId: client_txn_id,
     });
     if (existingPayment) {
       return res.redirect("https://zelanstore.com/user-dashboard");
