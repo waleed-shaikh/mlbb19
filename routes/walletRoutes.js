@@ -183,6 +183,7 @@ router.post("/create-payment", authMiddleware, async (req, res) => {
         udf1: paymentNote
       }
     );
+    console.log(response.data)
     
     if (response.data && response.data.status) {
       return res.status(200).send({ success: true, data: response.data.data });
