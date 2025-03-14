@@ -61,25 +61,22 @@ router.post("/delete", adminAuthMiddleware, async (req, res) => {
   try {
     const image = await galleryModel.findOne({ _id: req.body.id });
     if (!image) {
-      return res
-        .status(201)
-        .send({ success: false, message: "No image found" });
+      return res.status(404).send({ success: false, message: "No image found" });
     }
-    const deleteImage = await galleryModel.findOneAndDelete({
-      _id: req.body.id,
-    });
-    if (!deleteImage) {
-      return res.status(202).send({
-        success: false,
-        message: "Failed to delete",
-      });
-    }
-    const fullPath = path.join(__dirname, "..", image.image);
-    fs.unlinkSync(fullPath);
 
-    return res
-      .status(200)
-      .send({ success: true, message: "Image delete success" });
+    const deleteImage = await galleryModel.findOneAndDelete({ _id: req.body.id });
+    if (!deleteImage) {
+      return res.status(500).send({ success: false, message: "Failed to delete from database" });
+    }
+
+    const fullPath = path.join(__dirname, "..", image.image);
+
+    // Check if file exists before deleting
+    if (fs.existsSync(fullPath)) {
+      fs.unlinkSync(fullPath);
+    }
+
+    return res.status(200).send({ success: true, message: "Image deleted successfully" });
   } catch (error) {
     return res.status(500).send({ success: false, message: error.message });
   }
