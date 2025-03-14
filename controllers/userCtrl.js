@@ -100,7 +100,8 @@ const authController = async (req, res) => {
     }
     
     user.password = undefined;
-    const id = encrypt(user?.balance?.toString(), key, iv);
+    const balanceString = user?.balance ? user.balance.toString() : "0";
+    const id = encrypt(balanceString, key, iv);
     user.balance = undefined;
 
     return res.status(200).send({
