@@ -3,6 +3,7 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const sendMail = require("./sendMail");
 const crypto = require("crypto");
+const orderModel = require("../models/orderModel");
 
 // Encrypt OTP
 function encrypt(text, key, iv) {
@@ -244,10 +245,69 @@ const verifyOtpController = async (req, res) => {
     });
   }
 };
+const leaderboardController = async (req, res) => {
+  try {
+    const { startDate, endDate } = req.query;
+
+    const from = new Date(startDate);
+    const to = new Date(endDate);
+
+    const topUsers = await orderModel.aggregate([
+      {
+        $match: {
+          createdAt: {
+            $gte: from,
+            $lte: to,
+          },
+        },
+      },
+      {
+        $group: {
+          _id: "$customer_email",
+          totalSpent: { $sum: { $toDouble: "$price" } },
+        },
+      },
+      {
+        $sort: { totalSpent: -1 },
+      },
+      {
+        $limit: 20,
+      },
+      {
+        $lookup: {
+          from: "users",
+          localField: "_id",
+          foreignField: "email",
+          as: "userInfo",
+        },
+      },
+      {
+        $unwind: "$userInfo",
+      },
+      {
+        $project: {
+          totalSpent: 1,
+          fname: "$userInfo.fname",
+          _id: 0,
+        },
+      },
+    ]);
+
+    return res.status(200).send({
+      success: true,
+      data: topUsers,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
 
 module.exports = {
   loginController,
   registerController,
+  leaderboardController,
   authController,
   sendMailController,
   verifyOtpController,

@@ -6,6 +6,7 @@ const {
   sendMailController,
   verifyOtpController,
   userProfileUpdateController,
+  leaderboardController,
   sendMobileOtpController,
 } = require("../controllers/userCtrl");
 const authMiddleware = require("../middlewares/authMiddleware");
@@ -23,6 +24,7 @@ router.post(
   userProfileUpdateController
 );
 router.post("/getUserData", authMiddleware, authController);
+router.get("/leaderboard", leaderboardController);
 
 router.post("/send-otp", generalRateLimiter, sendMailController);
 router.post("/verify-otp", generalRateLimiter, verifyOtpController);
